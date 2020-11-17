@@ -5,7 +5,11 @@
  */
 package pkg2021_p2si;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  *
@@ -16,19 +20,25 @@ public class ClasificadorDebil {
     private Pixel pixel;
     private int umbral;
     private int direccion;
+    private double error;
+    private double confianza;
     
     public ClasificadorDebil(){}
 
-    public ClasificadorDebil(Pixel pixel, int umbral, int direccion){
+    public ClasificadorDebil(Pixel pixel, int umbral, int direccion,double confianza,double error){
         this.pixel = pixel;
         this.umbral = umbral;
         this.direccion = direccion;
+        this.confianza = confianza;
+        this.error = error;
     }
     
     public ClasificadorDebil(ClasificadorDebil clas){
         this.pixel = clas.pixel;
         this.umbral = clas.umbral;
         this.direccion = clas.direccion;
+        this.confianza = clas.confianza;
+        this.error = clas.error;
     }
 
     public Pixel getPixel() {
@@ -53,6 +63,35 @@ public class ClasificadorDebil {
 
     public void setDireccion(int direccion) {
         this.direccion = direccion;
+    }
+
+    public double getError() {
+        return error;
+    }
+
+    public void setError(double error) {
+        this.error = error;
+    }
+
+    public double getConfianza() {
+        return confianza;
+    }
+
+    public void setConfianza(double confianza) {
+        this.confianza = confianza;
+    }
+    
+    public void calcularConfianza(){
+        
+        if(error != 0){
+            double b = (1 - error)/error;
+            BigDecimal bd = BigDecimal.valueOf(b);
+            bd = bd.setScale(4,RoundingMode.HALF_UP);
+            b = bd.doubleValue();
+            
+            confianza = Math.log10(b) / Math.log10(2);
+            confianza = 0.5*confianza;
+        }
     }
     
     

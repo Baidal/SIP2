@@ -30,6 +30,13 @@ public class Adaboost {
     public void setA(int A) {
         this.A = A;
     }
+
+    public Adaboost(int clasificadoresDebiles, int A) {
+        this.clasificadoresDebiles = clasificadoresDebiles;
+        this.A = A;
+    }
+    
+    
     
     
 
@@ -68,14 +75,14 @@ public class Adaboost {
         
         
         
-        return new ClasificadorDebil(new Pixel(posPixel,-1),umbral,direccion);
+        return new ClasificadorDebil(new Pixel(posPixel,-1),umbral,direccion,0,0);
         
         
     }
     /**
      * Aplica el clasificador debil a cada elemento del conjunto de prueba.
      * En la posición i, el vector devuelto contendrá 0 si se ha clasificado
-     * bien o 1 si se ha clasificado mal.
+     * como que pertenece o 1 si se ha clasificado como que no pertenece.
      * @param h Clasificador Debil
      * @param prueba Conjunto de pruebas
      * @return List<Integer>
@@ -181,7 +188,7 @@ public class Adaboost {
                         conjuntoPrueba.add(new Pair<>((Imagen)ranas.get(posicionRana), -1));
                         posicionRana++;
                         break;
-                        
+                       
                     case 3:
                         conjuntoPrueba.add(new Pair<>((Imagen)barcos.get(posicionBarco), -1));
                         posicionBarco++;
@@ -190,6 +197,7 @@ public class Adaboost {
                 
                 
             }
+                    
             
         }
         
@@ -198,20 +206,62 @@ public class Adaboost {
     
     private double ADABOOST(){
         
-        List entrenamiento = cargarConjuntoPrueba(350,50);
+        List<Pair<Imagen,Integer>> entrenamiento = cargarConjuntoPrueba(50,350);
         List<Double> D = new ArrayList<>(Collections.nCopies(entrenamiento.size(), (double)1/entrenamiento.size())); //Creamos la arraylist D inicializada a 1/N
         List<ClasificadorDebil> T = new ArrayList<>(clasificadoresDebiles);
-        
+        ClasificadorDebil mejorClasificador;
+        int si = 0, no = 0;
         for(int i = 0; i < clasificadoresDebiles; i++){ //Bucle principal
+            
+            mejorClasificador = null;
             
             for(int j = 0; j < A; j++){
                 
-                ClasificadorDebil h = generarClasifAzar(256,3072);
+                //Generamos el clasificador y lo aplicamos al conjunto de pruebas
+                ClasificadorDebil h = generarClasifAzar(3072,256);
+                List<Integer> resultado = aplicarClasifDebil(h,entrenamiento);
                 
+                /*
+                if(i == 0 && j == 0){
+                    for(int z = 0; z < resultado.size(); z++)
+                        if(resultado.get(z) == 0)
+                            no++;
+                        else
+                            si++;
+                    
+                    System.out.println("No: " + no + " Si: " + si);
+                }*/
+                
+                for(int k = 0; k < entrenamiento.size();k++){//Calculamos el error
+                    if(entrenamiento.get(k).getValue().equals(1) && resultado.get(k).equals(1)){
+                        h.setError(h.getError() + D.get(k));
+                    }
+                    if(entrenamiento.get(k).getValue().equals(-1) && resultado.get(k).equals(0)){
+                        h.setError(h.getError() + D.get(k));
+                    }
+                
+                }
+                
+                /*
+                if(i == 0){
+                    System.out.println("Numero errores para j("+ j +"): " + numErrores);
+                    if(errorPeque > numErrores || errorPeque == 0)
+                        errorPeque = numErrores;
+                }*/
+                
+                if(mejorClasificador == null || mejorClasificador.getError() > h.getError()){
+                    mejorClasificador = h;                
+                }
             }
+            
+            if(mejorClasificador != null)
+                mejorClasificador.calcularConfianza();
+            T.add(mejorClasificador);
             
             
         }
+        
+        //System.out.println("Error mas pequeño para i = 0 " + errorPeque);
         
         return 1.0;
     }
@@ -228,7 +278,9 @@ public class Adaboost {
             //Se ejecuta la práctica como entrenamiento
             if (args[0].equals("-t")) {
                
-                
+               Adaboost adaboost = new Adaboost(1024,1024);
+               
+               adaboost.ADABOOST();
                
                 
                 
