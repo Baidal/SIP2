@@ -7,9 +7,7 @@ package pkg2021_p2si;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
 
 /**
  *
@@ -31,6 +29,7 @@ public class ClasificadorDebil {
         this.direccion = direccion;
         this.confianza = confianza;
         this.error = error;
+        
     }
     
     public ClasificadorDebil(ClasificadorDebil clas){
@@ -39,6 +38,7 @@ public class ClasificadorDebil {
         this.direccion = clas.direccion;
         this.confianza = clas.confianza;
         this.error = clas.error;
+        
     }
 
     public Pixel getPixel() {

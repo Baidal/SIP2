@@ -54,6 +54,46 @@ public class Adaboost {
     }
     
     /**
+     * Aplica un clasificador debil a una imagen en concreto
+     * @param h Clasificador debil
+     * @param prueba Conjunto de imagenes de prueba
+     * @param pos Posicion de prueba a aplicar
+     * @return int -1 si no determina que no pertenece, 1 si determina que sí
+     * pertenece
+     */
+    private int aplicarUnClasifDebil(ClasificadorDebil h, List<Pair<Imagen,Integer>> prueba, int pos){
+            //Cargamos la imagen pos del conjunto de pruebas
+            Imagen img = (Imagen)prueba.get(pos).getKey();
+            
+            //Cargamos el vector de bytes de la imagen
+            byte imageData[] = img.getImageData();
+            
+            //Asignamos el canal al clasificador debil
+            h.getPixel().setCanal(Byte2Unsigned(imageData[h.getPixel().getPosicion()]));
+        
+            int pertenece;
+            
+            //Clasificamos si pertenece a la clase usando el umbral
+            if(h.getDireccion() == 1){
+                //Pertenecerá a la clase si el pixel es mayor que el umbral
+                if(h.getPixel().getCanal() > h.getUmbral())
+                    pertenece = 1; //Pertenece
+                else
+                    pertenece = -1; //No pertenece 
+            }else{
+                //Pertenecerá a la clase si el pixel es mayor que el umbral
+                if(h.getPixel().getCanal() >= h.getUmbral())
+                    pertenece = -1; //No Pertenece
+                else
+                    pertenece = 1; //Pertenece
+            }
+            
+            return pertenece;
+    }
+
+    
+    
+    /**
      * Genera un clasificador débil al azar. La posición del pixel y el umbral
      * vienen dados en dimPixel y dimUmbral. De esa forma, si dimPixel es 3072,
      * el pixel elegido estará definido en [0,3071]
@@ -81,8 +121,8 @@ public class Adaboost {
     }
     /**
      * Aplica el clasificador debil a cada elemento del conjunto de prueba.
-     * En la posición i, el vector devuelto contendrá 0 si se ha clasificado
-     * como que pertenece o 1 si se ha clasificado como que no pertenece.
+     * En la posición i, el vector devuelto contendrá 1 si se ha clasificado
+     * como que pertenece o -1 si se ha clasificado como que no pertenece.
      * @param h Clasificador Debil
      * @param prueba Conjunto de pruebas
      * @return List<Integer>
@@ -91,31 +131,8 @@ public class Adaboost {
         List<Integer> vector_resultado = new ArrayList<>(prueba.size());
         
         for(int i = 0; i < prueba.size(); i++){
-            //Cargamos la imagen i del conjunto de pruebas
-            Imagen img = (Imagen)prueba.get(i).getKey();
             
-            //Cargamos el vector de bytes de la imagen
-            byte imageData[] = img.getImageData();
-            
-            //Asignamos el canal al clasificador debil
-            h.getPixel().setCanal(Byte2Unsigned(imageData[h.getPixel().getPosicion()]));
-        
-            int pertenece;
-            
-            //Clasificamos si pertenece a la clase usando el umbral
-            if(h.getDireccion() == 1){
-                //Pertenecerá a la clase si el pixel es mayor que el umbral
-                if(h.getPixel().getCanal() > h.getUmbral())
-                    pertenece = 0; //Pertenece
-                else
-                    pertenece = 1; //No pertenece 
-            }else{
-                //Pertenecerá a la clase si el pixel es mayor que el umbral
-                if(h.getPixel().getCanal() >= h.getUmbral())
-                    pertenece = 1; //No Pertenece
-                else
-                    pertenece = 0; //Pertenece
-            }
+            int pertenece = aplicarUnClasifDebil(h,prueba,i);
             
             vector_resultado.add(pertenece);
         }
@@ -204,13 +221,78 @@ public class Adaboost {
         return conjuntoPrueba;
     }
     
+    private List cargarConjuntoTest(int tamanyo){
+        List<Imagen> lista = new ArrayList<>();
+        
+        //Cargador CIFAR10 de SI
+        CIFAR10Loader ml = new CIFAR10Loader();
+        ml.loadDBFromPath("./cifar10_2000");
+        
+        //Cargamos las imagenes que son aviones
+        ArrayList aviones = ml.getImageDatabaseForDigit(1);
+        
+        for(int i = aviones.size() - tamanyo; i < aviones.size(); i++){
+            
+            lista.add((Imagen)aviones.get(i));
+            
+        }
+        
+        return lista;
+        
+    }
+    
+    /**
+     * Aplica un conjunto de clasificadores debiles a una imagen-
+     * @param clasificadores Clasificadores a aplicar
+     * @param img Imagen a la que aplicar los clasificadores.
+     * @return Lista de enteros que contendrá -1 o 1, dependiendo de si pertenece
+     * o no.
+     */
+    private List<Integer> aplicarClasificadoresImagen(List<ClasificadorDebil> clasificadores, Imagen img){
+        List<Integer> list = new ArrayList<>();
+    
+        //Cargamos el vector de bytes de la imagen
+        byte imageData[] = img.getImageData();
+            
+        
+        
+        for(int i = 0; i < clasificadores.size(); i++){
+            //Asignamos el canal al clasificador debil
+            clasificadores.get(i).getPixel().setCanal(Byte2Unsigned(imageData[clasificadores.get(i).getPixel().getPosicion()]));
+        
+            int pertenece;
+            
+            //Clasificamos si pertenece a la clase usando el umbral
+            if(clasificadores.get(i).getDireccion() == 1){
+                //Pertenecerá a la clase si el pixel es mayor que el umbral
+                if(clasificadores.get(i).getPixel().getCanal() > clasificadores.get(i).getUmbral())
+                    pertenece = 1; //Pertenece
+                else
+                    pertenece = -1; //No pertenece 
+            }else{
+                //Pertenecerá a la clase si el pixel no es mayor que el umbral
+                if(clasificadores.get(i).getPixel().getCanal() >= clasificadores.get(i).getUmbral())
+                    pertenece = -1; //No Pertenece
+                else
+                    pertenece = 1; //Pertenece
+            }
+            
+            list.add(pertenece);
+            
+        }
+        
+        return list;
+    }
+    
     private double ADABOOST(){
         
         List<Pair<Imagen,Integer>> entrenamiento = cargarConjuntoPrueba(50,350);
         List<Double> D = new ArrayList<>(Collections.nCopies(entrenamiento.size(), (double)1/entrenamiento.size())); //Creamos la arraylist D inicializada a 1/N
         List<ClasificadorDebil> T = new ArrayList<>(clasificadoresDebiles);
         ClasificadorDebil mejorClasificador;
-        int si = 0, no = 0;
+        double sumatorio = 0;
+        
+        
         for(int i = 0; i < clasificadoresDebiles; i++){ //Bucle principal
             
             mejorClasificador = null;
@@ -221,47 +303,69 @@ public class Adaboost {
                 ClasificadorDebil h = generarClasifAzar(3072,256);
                 List<Integer> resultado = aplicarClasifDebil(h,entrenamiento);
                 
-                /*
-                if(i == 0 && j == 0){
-                    for(int z = 0; z < resultado.size(); z++)
-                        if(resultado.get(z) == 0)
-                            no++;
-                        else
-                            si++;
-                    
-                    System.out.println("No: " + no + " Si: " + si);
-                }*/
                 
                 for(int k = 0; k < entrenamiento.size();k++){//Calculamos el error
-                    if(entrenamiento.get(k).getValue().equals(1) && resultado.get(k).equals(1)){
+                    if(!entrenamiento.get(k).getValue().equals(resultado.get(k))){
                         h.setError(h.getError() + D.get(k));
                     }
-                    if(entrenamiento.get(k).getValue().equals(-1) && resultado.get(k).equals(0)){
-                        h.setError(h.getError() + D.get(k));
-                    }
-                
+                    
                 }
-                
-                /*
-                if(i == 0){
-                    System.out.println("Numero errores para j("+ j +"): " + numErrores);
-                    if(errorPeque > numErrores || errorPeque == 0)
-                        errorPeque = numErrores;
-                }*/
+            
                 
                 if(mejorClasificador == null || mejorClasificador.getError() > h.getError()){
                     mejorClasificador = h;                
                 }
             }
             
+            //Calculamos la confianza del clasificador y lo guardamos
             if(mejorClasificador != null)
                 mejorClasificador.calcularConfianza();
             T.add(mejorClasificador);
             
+            //Calculamos la nueva distribucion
+            for(int j = 0; j < D.size();j++){
+                
+                //Calculo de y(i)*h(x_i)
+                int pertenece = aplicarUnClasifDebil(mejorClasificador,entrenamiento,j);
+                
+                double nueva = D.get(j);
+                nueva = nueva*Math.exp(-1 * mejorClasificador.getConfianza() * pertenece * entrenamiento.get(j).getValue());
+                
+                D.set(j, nueva);
+                
+            }
+            
+            //Calculo de z
+            double z = 0;
+            for(int j = 0; j < D.size(); j++)
+                z = z + D.get(j);
+            
+            //Calculo definitivo de D
+            for(int j = 0; j < D.size(); j++){
+                D.set(j, D.get(j)/z);
+             
+            }
             
         }
         
-        //System.out.println("Error mas pequeño para i = 0 " + errorPeque);
+        List test = cargarConjuntoTest(10);
+        
+        for(int i = 0; i < test.size(); i++){
+            sumatorio = 0;
+            List<Integer> resultado = aplicarClasificadoresImagen(T,(Imagen)test.get(i));
+            
+            for(int j = 0; j < resultado.size(); j++){
+            
+                sumatorio = sumatorio + T.get(j).getConfianza()*(double)resultado.get(j);
+                
+            }
+            
+            if(sumatorio > 0 )
+                System.out.println("La imagen " + i + " se ha analizado correctamente.");
+            else
+                System.out.println("La imagen " + i + " no se ha analizado correctamente.");
+        }
+        
         
         return 1.0;
     }
@@ -278,7 +382,7 @@ public class Adaboost {
             //Se ejecuta la práctica como entrenamiento
             if (args[0].equals("-t")) {
                
-               Adaboost adaboost = new Adaboost(1024,1024);
+               Adaboost adaboost = new Adaboost(200,200);
                
                adaboost.ADABOOST();
                
