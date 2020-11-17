@@ -22,6 +22,7 @@ public class Adaboost {
     private int clasificadoresDebiles;
     
     private int A;
+    private CIFAR10Loader ml;
 
     public int getA() {
         return A;
@@ -34,6 +35,8 @@ public class Adaboost {
     public Adaboost(int clasificadoresDebiles, int A) {
         this.clasificadoresDebiles = clasificadoresDebiles;
         this.A = A;
+        ml = new CIFAR10Loader();
+        ml.loadDBFromPath("./cifar10_2000");
     }
     
     
@@ -153,10 +156,7 @@ public class Adaboost {
 
         //ArrayList que vamos a devolver
         List<Pair<Imagen,Integer>> conjuntoPrueba = new ArrayList<>(tamanyo);
-        
-        //Cargador CIFAR10 de SI
-        CIFAR10Loader ml = new CIFAR10Loader();
-        ml.loadDBFromPath("./cifar10_2000");
+       
         
         //Cargamos las imagenes que son aviones
         ArrayList aviones = ml.getImageDatabaseForDigit(0);
@@ -223,10 +223,6 @@ public class Adaboost {
     
     private List cargarConjuntoTest(int tamanyo){
         List<Imagen> lista = new ArrayList<>();
-        
-        //Cargador CIFAR10 de SI
-        CIFAR10Loader ml = new CIFAR10Loader();
-        ml.loadDBFromPath("./cifar10_2000");
         
         //Cargamos las imagenes que son aviones
         ArrayList aviones = ml.getImageDatabaseForDigit(1);
@@ -361,9 +357,9 @@ public class Adaboost {
             }
             
             if(sumatorio > 0 )
-                System.out.println("La imagen " + i + " se ha analizado correctamente.");
+                System.out.println("La imagen " + i + " se ha analizado como avión.");
             else
-                System.out.println("La imagen " + i + " no se ha analizado correctamente.");
+                System.out.println("La imagen " + i + " no se ha analizado como no avión.");
         }
         
         
@@ -382,7 +378,7 @@ public class Adaboost {
             //Se ejecuta la práctica como entrenamiento
             if (args[0].equals("-t")) {
                
-               Adaboost adaboost = new Adaboost(200,200);
+               Adaboost adaboost = new Adaboost(800,100);
                
                adaboost.ADABOOST();
                
