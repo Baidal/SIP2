@@ -167,7 +167,7 @@ public class Adaboost {
         
         
         
-        int num_clase[] = new int[5];;
+        int num_clase[] = new int[5];
         
         switch(clase){
             case "avion":
@@ -290,6 +290,7 @@ public class Adaboost {
             }else{ //Imagenes del resto de clases
                 switch(rand.nextInt(4)){
                     case 0:
+                            
                         imagenesConjuntoTest.add(new Pair<>(num_clase[1], posicionClase1));
                         conjuntoPrueba.add(new Pair<>((Imagen)clase1.get(posicionClase1), -1));
                         posicionClase1++;
@@ -323,40 +324,17 @@ public class Adaboost {
         return conjuntoPrueba;
     }
     
-    /**
-     * Carga el conjunto de test a partir de las N imagenes finales de la clase 
-     * @param tamanyo Tamaño del conjunto de prueba
-     * @param clase Clase del conjunto de test a probar
-     * @return List<Imagen>
-     */
-    private List cargarConjuntoTest(int tamanyo, String clase){
-        List<Imagen> lista = new ArrayList<>();
-        
-        int num_clase[] = calcularNumeroClase(clase);
-             
-        
-        //Cargamos las imagenes que son de la clase a probar
-        ArrayList clase0 = ml.getImageDatabaseForDigit(num_clase[0]);
-        
-        //Recorre las n ultimas imagenes de la clase
-        for(int i = clase0.size() - tamanyo; i < clase0.size(); i++){
-            
-            lista.add((Imagen)clase0.get(i));
-            
-        }
-        
-        return lista;
-        
-    }
+    
     
     /**
-     * Aplica un conjunto de clasificadores debiles a una imagen-
+     * Aplica un conjunto de clasificadores debiles a una imagen.
+     * Devolverá un valor que indicará si se ha resuelto como que pertenece o
+     * como que no.
      * @param clasificadores Clasificadores a aplicar
      * @param img Imagen a la que aplicar los clasificadores.
-     * @return Lista de enteros que contendrá -1 o 1, dependiendo de si pertenece
-     * o no.
+     * @return int Negativo si no pertenece, positivo si sí
      */
-    private List<Integer> aplicarClasificadoresImagen(List<ClasificadorDebil> clasificadores, Imagen img){
+    private int aplicarClasificadorFuerteImagen(List<ClasificadorDebil> clasificadores, Imagen img){
         List<Integer> list = new ArrayList<>();
     
         //Cargamos el vector de bytes de la imagen
@@ -389,8 +367,23 @@ public class Adaboost {
             
         }
         
-        return list;
+        double pertenece = 0.0;
+        
+        for(int i = 0; i < list.size(); i++){
+            
+            pertenece = pertenece + clasificadores.get(i).getConfianza()*list.get(i);
+            
+        }
+        
+        if(pertenece > 0.0)
+            return 1;
+        else
+            return -1;
+        
     }
+    
+    
+    
     
     /**
      * Aplica adaboost a una clase determinada, que vendrá indicada por el
@@ -470,35 +463,117 @@ public class Adaboost {
         return T;
     }
     
-    private List cargarTodasImagenesPrueba(Set<Pair<Integer,Integer>> imagenesConjuntoTest){
-        List<Pair<Imagen,Integer>> conjuntoPrueba = new ArrayList<>();
+    /**
+     * Carga todas las imagenes que han sido usadas para probar las distintas
+     * clases y las que no. Estas están en la variable pasada por parámetro.
+     * 
+     * @param imagenesConjuntoTest Set de parejas que contienen las imagenes 
+     *                             para probar el conjunto de tests. La key de
+     *                             la pareja será la clase a la que pertenece,
+     *                             el value la posición de la foto.
+     * 
+     * @return List<List<Pair<Imagen,Integer>>> Devuelve una lista de listas de parejas.
+     *                                          Esta primera lista contendrá en la posición 
+     *                                          0 las imagenes que se han usado en la prueba,
+     *                                          y en la posición 1 las que no se han usado 
+     *                                          (y se usarán en el test).
+     */
+    private List cargarTodasImagenesPruebayTest(Set<Pair<Integer,Integer>> imagenesConjuntoTest){
+        //Lista a devolver
+        List<List<Pair<Imagen,Integer>>> testYPrueba = new ArrayList<>();
         
+        List<Pair<Imagen,Integer>> imagenesPrueba = new ArrayList<>();
+        List<Pair<Imagen,Integer>> imagenesTest = new ArrayList<>();
+        
+        //Lista de cada una de las listas de las imagenes
         List<List<Imagen>> todasImagenes = new ArrayList();
         
         for(int i = 0; i < 10; i++){
             todasImagenes.add(ml.getImageDatabaseForDigit(i));
         }
+        
+        
 
-        int contador = 0;
+        //int contador = 0;
         
         for(int i = 0; i < 10; i++){//recorre las 10 clases
-            for(int j = 0; j < 200; j++){ //recorre todas las posiciones de cada clase
+            for(int j = 0; j < todasImagenes.get(i).size(); j++){ //recorre todas las posiciones de cada clase
                 
+                //Si contiene la clase
                 if(imagenesConjuntoTest.contains(new Pair<>(i,j))){
                     
-                    conjuntoPrueba.add(new Pair<>((Imagen)todasImagenes.get(i).get(j), i));
+                    imagenesPrueba.add(new Pair<>((Imagen)todasImagenes.get(i).get(j), i));
+                    //contador++;
+                }else{
                     
-                       contador++;
+                    imagenesTest.add(new Pair<>((Imagen)todasImagenes.get(i).get(j), i));
+                    
                 }
                 
             }
             
-            
         }
         
-        System.out.println("Hay " + contador + " imágenes.");
+        testYPrueba.add(imagenesPrueba);
+        testYPrueba.add(imagenesTest);
+        //System.out.println("Hay " + contador + " imágenes.");
         
-        return conjuntoPrueba;
+        return testYPrueba;
+    }
+    
+    
+    private boolean comprobarResultadosAplicarClasificadoresFuertes(int resultados[]){
+        
+        int numeroUnos = 0, numeroMenosUnos = 0;
+        
+        for(int i = 0; i < resultados.length;i++){
+            if(resultados[i] == 1)
+                numeroUnos++;
+            else
+                numeroMenosUnos++;
+        }
+    
+        return !(numeroUnos != 1 && numeroMenosUnos != 1);
+        
+    }
+    
+    /**
+     * Aplica el conjunto de los 10 clasificadores débiles a un conjunto de imagenes
+     * pasado por parámetro. Devuelve el porcentaje de acierto que se ha tenido.
+     * @param clasificadoresDebiles Lista de Listas de clasificadores débiles. Por ejemplo,
+     *                              la posición 0 tendrá la lista de los clasificadores
+     *                              débiles de la clase avión.
+     * @param imagenes Pareja de imagenes. La key es la imagen, el value es la clase a la que
+     *                  pertenece realmente la imagen.
+     * @return Integer. Porcentaje de acierto de los clasificadores débiles.
+     */
+    private int comprobarImagenes(List<List<ClasificadorDebil>> clasificadoresDebiles, List<Pair<Imagen,Integer>> imagenes){
+        
+        //Variable que guardará el resultado de aplicar cada clasificador débil a una imagen
+        int resultados[] = new int[10];
+        
+        //recorremos todas las imagenes
+        for(int i = 0; i < imagenes.size(); i++){
+            
+            //Aplicamos cada clasificadorfuerte a cada imagen
+            for(int y = 0; y < resultados.length; y++){
+                
+                resultados[y] = aplicarClasificadorFuerteImagen(clasificadoresDebiles.get(y),imagenes.get(i).getKey());
+                
+            }
+           
+            if(comprobarResultadosAplicarClasificadoresFuertes(resultados)){
+                
+            }else{
+                
+                
+            }
+        
+        
+        }
+        
+        
+        return 1;
     }
     
     
@@ -517,55 +592,33 @@ public class Adaboost {
                
                Adaboost adaboost = new Adaboost(800,100);
                
-               System.out.println("Generando Clasificadores débiles de la clase avion.");
-               List<ClasificadorDebil> T_avion = adaboost.ADABOOST("avion");
-               System.out.println("Completado. Generando Clasificadores débiles de la clase coche.");
-               List<ClasificadorDebil> T_coche = adaboost.ADABOOST("coche");
-               System.out.println("Completado. Generando Clasificadores débiles de la clase ciervo.");
-               List<ClasificadorDebil> T_ciervo = adaboost.ADABOOST("ciervo");
-               System.out.println("Completado. Generando Clasificadores débiles de la clase gato.");
-               List<ClasificadorDebil> T_gato = adaboost.ADABOOST("gato");
-               System.out.println("Completado. Generando Clasificadores débiles de la clase pajaro.");
-               List<ClasificadorDebil> T_pajaro = adaboost.ADABOOST("pajaro");
-               System.out.println("Completado. Generando Clasificadores débiles de la clase perro.");
-               List<ClasificadorDebil> T_perro = adaboost.ADABOOST("perro");
-               System.out.println("Completado. Generando Clasificadores débiles de la clase rana.");
-               List<ClasificadorDebil> T_rana = adaboost.ADABOOST("rana");
-               System.out.println("Completado. Generando Clasificadores débiles de la clase caballo.");
-               List<ClasificadorDebil> T_caballo = adaboost.ADABOOST("caballo");
-               System.out.println("Completado. Generando Clasificadores débiles de la clase barco.");
-               List<ClasificadorDebil> T_barco = adaboost.ADABOOST("barco");
-               System.out.println("Completado. Generando Clasificadores débiles de la clase camion.");
-               List<ClasificadorDebil> T_camion = adaboost.ADABOOST("camion");
-               System.out.println("Completado.");
+               String[] clases = {"avion","coche","ciervo","gato","pajaro","perro","rana","caballo","barco","camion"};
+               
+               List<List<ClasificadorDebil>> clasificadoresDebiles = new ArrayList<>();
+               
+               for(int i = 0; i < clases.length;i++){
+                   if(i == 0)
+                        System.out.print("Generando Clasificadores débiles de la clase " + clases[i] + ". ");
+                   else
+                       System.out.print("Completado." + "\n" + "Generando Clasificadores débiles de la clase "+ clases[i] + ". ");
+                       
+                    List<ClasificadorDebil> clasificadores = adaboost.ADABOOST(clases[i]);
+                    clasificadoresDebiles.add(clasificadores);
+                    
+                    if(i == clases.length - 1)
+                        System.out.println("Completado.");
+               }
                
                imagenesConjuntoTest = adaboost.getImagenesConjuntoTest();
                
-               List<Pair<Imagen,Integer>> todasImagenesConjuntoPrueba = adaboost.cargarTodasImagenesPrueba(imagenesConjuntoTest);
+               List<List<Pair<Imagen,Integer>>> todasImagenes = adaboost.cargarTodasImagenesPruebayTest(imagenesConjuntoTest);
+               List<Pair<Imagen,Integer>> imagenesPrueba = todasImagenes.get(0);
+               List<Pair<Imagen,Integer>> imagenesTest = todasImagenes.get(1);
                
-               /*
-               //PARTE DE GENERERAR EL TEST.
-        
-                List test = adaboost.cargarConjuntoTest(10,"avion");
-
-                double sumatorio;
-
-                for(int i = 0; i < test.size(); i++){
-                    sumatorio = 0;
-                    List<Integer> resultado = adaboost.aplicarClasificadoresImagen(T,(Imagen)test.get(i));
-
-                    for(int j = 0; j < resultado.size(); j++){
-
-                        sumatorio = sumatorio + T.get(j).getConfianza()*(double)resultado.get(j);
-
-                    }
-
-                    if(sumatorio > 0 )
-                        System.out.println("La imagen " + i + " se ha analizado como avión.");
-                    else
-                        System.out.println("La imagen " + i + " no se ha analizado como no avión.");
-                }*/
+               System.out.println("imagenesPrueba: " + imagenesPrueba.size() + "\n" + "imagenesTest: " + imagenesTest.size());
                
+               int porcentajeImagenesPrueba = adaboost.comprobarImagenes(clasificadoresDebiles,imagenesPrueba);
+               int porcentajeImagenesTest = adaboost.comprobarImagenes(clasificadoresDebiles,imagenesTest);
                 
                 
             } else {
