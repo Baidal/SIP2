@@ -6,8 +6,11 @@
 package pkg2021_p2si;
 
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.Random;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,6 +18,7 @@ import java.util.HashSet;
 import java.util.TreeSet;
 import javafx.util.Pair;
 import java.util.List;
+import java.util.Scanner;
 import java.util.Set;
 
 
@@ -70,7 +74,7 @@ public class Adaboost {
         return b & 0xFF;
     }
     
-    public void guardarClasificadoresDebiles(List<List<ClasificadorDebil>> clasif, String fileName) throws IOException{
+    public static void guardarClasificadoresDebiles(List<List<ClasificadorDebil>> clasif, String fileName) throws IOException{
         String escribir = "";
         
         for(int i = 0; i < clasif.size(); i++)
@@ -81,6 +85,60 @@ public class Adaboost {
         
         writer.close();
     
+    }
+    
+    /**
+     * Lee los clasificadores débiles del fichero pasado por parametro
+     * @param filename String. Nombre del fichero.
+     * @return List<List<ClasificadorDebil>>
+     */
+    public static List<List<ClasificadorDebil>> leerClasificadoresDebiles(String filename){
+        List<List<ClasificadorDebil>> clasif = new ArrayList<>();
+        int num_linea = 0;
+        
+        //Inicializamos las listas que contendrán los clasif debiles
+        for(int i = 0; i < 10; i++){
+            
+            clasif.add(new ArrayList<ClasificadorDebil>());
+            
+        }
+        
+        try{
+            File archivo = new File(filename);
+            Scanner sc = new Scanner(archivo);
+            
+            //Leemos las 10 líneas que contendrá el fichero
+            while(sc.hasNextLine()){
+                Scanner linea = new Scanner(sc.nextLine());
+                
+                /**
+                 * Sabemos que el contenido del fichero es [ num num num num num num , num num num num num num , ... ]
+                 * por lo que leeremos cada línea mientras el siguiente token sea diferente a ], que será el final.
+                 */
+                while(!linea.next().equals("]")){
+                    
+                    int posicion = linea.nextInt();
+                    int canal = linea.nextInt();
+                    int umbral = linea.nextInt();
+                    int direccion = linea.nextInt();
+                    String error = linea.next();
+                    double error_decimal = Double.parseDouble(error);
+                    String confianza = linea.next();
+                    double confianza_decimal = Double.parseDouble(confianza);
+                    
+                    Pixel p = new Pixel(posicion,canal);
+                    
+                    ClasificadorDebil clas = new ClasificadorDebil(p,umbral,direccion,confianza_decimal,error_decimal);
+                    clasif.get(num_linea).add(clas);
+                }
+                num_linea++;
+            }
+                    
+        }catch(FileNotFoundException e){
+            e.printStackTrace();
+        }
+        
+        return clasif;
     }
     
     
@@ -628,7 +686,7 @@ public class Adaboost {
                }
                
                try{
-                    adaboost.guardarClasificadoresDebiles(clasificadoresDebiles,args[1]);
+                    Adaboost.guardarClasificadoresDebiles(clasificadoresDebiles,args[1]);
                }catch(IOException e){
                    e.printStackTrace();
                }
@@ -645,9 +703,8 @@ public class Adaboost {
                 
                 
             } else {
-                //Se ejecuta la práctica como test
-               ;
-
+                List<List<ClasificadorDebil>> clasificadoresDebiles = Adaboost.leerClasificadoresDebiles(args[0]);
+                System.out.println("ya");
             }
         } else {
             System.out.println("El número de parámetros es incorrecto");

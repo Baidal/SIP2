@@ -44,7 +44,7 @@ public class Pixel {
 
     @Override
     public String toString() {
-        return "Pixel{" + "posicion=" + posicion + ", canal=" + canal + '}';
+        return posicion + " " + canal;
     }
 
     @Override

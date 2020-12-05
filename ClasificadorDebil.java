@@ -137,8 +137,10 @@ public class ClasificadorDebil {
 
     @Override
     public String toString() {
-        return "ClasificadorDebil{" + "pixel=" + pixel + ", umbral=" + umbral + ", direccion=" + direccion + '}';
+        return " " + pixel + " " + umbral + " " + direccion + " " + error + " " + confianza + " ";
     }
+
+    
     
     
     
