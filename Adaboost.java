@@ -5,6 +5,9 @@
  */
 package pkg2021_p2si;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Random;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -66,6 +69,20 @@ public class Adaboost {
     public static int Byte2Unsigned(byte b) {
         return b & 0xFF;
     }
+    
+    public void guardarClasificadoresDebiles(List<List<ClasificadorDebil>> clasif, String fileName) throws IOException{
+        String escribir = "";
+        
+        for(int i = 0; i < clasif.size(); i++)
+            escribir = escribir + clasif.get(i).toString() + "\n";
+        
+        BufferedWriter writer = new BufferedWriter(new FileWriter(fileName));
+        writer.write(escribir);
+        
+        writer.close();
+    
+    }
+    
     
     /**
      * Aplica un clasificador debil a una imagen en concreto
@@ -580,6 +597,7 @@ public class Adaboost {
     /**
      * @param args the command line arguments
      */
+    @SuppressWarnings("CallToPrintStackTrace")
     public static void main(String[] args) {
         
         Set<Pair<Integer,Integer>> imagenesConjuntoTest;
@@ -609,6 +627,11 @@ public class Adaboost {
                         System.out.println("Completado.");
                }
                
+               try{
+                    adaboost.guardarClasificadoresDebiles(clasificadoresDebiles,args[1]);
+               }catch(IOException e){
+                   e.printStackTrace();
+               }
                imagenesConjuntoTest = adaboost.getImagenesConjuntoTest();
                
                List<List<Pair<Imagen,Integer>>> todasImagenes = adaboost.cargarTodasImagenesPruebayTest(imagenesConjuntoTest);
