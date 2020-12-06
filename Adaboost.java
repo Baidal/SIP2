@@ -92,7 +92,7 @@ public class Adaboost {
      * @param filename String. Nombre del fichero.
      * @return List<List<ClasificadorDebil>>
      */
-    public static List<List<ClasificadorDebil>> leerClasificadoresDebiles(String filename){
+    public static List<List<ClasificadorDebil>> leerClasificadoresDebiles(String filename)throws FileNotFoundException{
         List<List<ClasificadorDebil>> clasif = new ArrayList<>();
         int num_linea = 0;
         
@@ -103,40 +103,40 @@ public class Adaboost {
             
         }
         
-        try{
-            File archivo = new File(filename);
-            Scanner sc = new Scanner(archivo);
+        
+        File archivo = new File(filename);
+        Scanner sc = new Scanner(archivo);
             
-            //Leemos las 10 líneas que contendrá el fichero
-            while(sc.hasNextLine()){
-                Scanner linea = new Scanner(sc.nextLine());
+        //Leemos las 10 líneas que contendrá el fichero
+        while(sc.hasNextLine()){
+            Scanner linea = new Scanner(sc.nextLine());
                 
-                /**
-                 * Sabemos que el contenido del fichero es [ num num num num num num , num num num num num num , ... ]
-                 * por lo que leeremos cada línea mientras el siguiente token sea diferente a ], que será el final.
-                 */
-                while(!linea.next().equals("]")){
+            /**
+             * Sabemos que el contenido del fichero es [ num num num num num num , num num num num num num , ... ]
+             * por lo que leeremos cada línea mientras el siguiente token sea diferente a ], que será el final.
+            */
+            while(!linea.next().equals("]")){
                     
-                    int posicion = linea.nextInt();
-                    int canal = linea.nextInt();
-                    int umbral = linea.nextInt();
-                    int direccion = linea.nextInt();
-                    String error = linea.next();
-                    double error_decimal = Double.parseDouble(error);
-                    String confianza = linea.next();
-                    double confianza_decimal = Double.parseDouble(confianza);
+                int posicion = linea.nextInt();
+                int canal = linea.nextInt();
+                int umbral = linea.nextInt();
+                int direccion = linea.nextInt();
+                String error = linea.next();
+                double error_decimal = Double.parseDouble(error);
+                String confianza = linea.next();
+                double confianza_decimal = Double.parseDouble(confianza);
                     
-                    Pixel p = new Pixel(posicion,canal);
+                Pixel p = new Pixel(posicion,canal);
                     
-                    ClasificadorDebil clas = new ClasificadorDebil(p,umbral,direccion,confianza_decimal,error_decimal);
-                    clasif.get(num_linea).add(clas);
-                }
-                num_linea++;
+                ClasificadorDebil clas = new ClasificadorDebil(p,umbral,direccion,confianza_decimal,error_decimal);
+                clasif.get(num_linea).add(clas);
             }
-                    
-        }catch(FileNotFoundException e){
-            e.printStackTrace();
+            
+            num_linea++;
+        
         }
+                    
+        
         
         return clasif;
     }
@@ -597,7 +597,22 @@ public class Adaboost {
     }
     
     
-    private boolean comprobarResultadosAplicarClasificadoresFuertes(int resultados[]){
+    /**
+     * Se encarga de comprobar la array de resultados que se obtiene al aplicar
+     * los clasificadores débiles a una imagen. 
+     * 
+     * Devolverá 1 si solamente uno de los clasificadores fuertes ha dictado
+     * que la imagen pertenece a una clase.
+     * 
+     * Devolverá 0 si más de un clasificador fuerte ha dictado que la imagen
+     * pertenece a una clase.
+     * 
+     * Devolverá -1 si ningún clasificado fuerte ha dictado que la imagen pertence
+     * a una clase.
+     * @param resultados int[]
+     * @return int {-1,0,1}
+     */
+    private int comprobarResultadosAplicarClasificadoresFuertes(int resultados[]){
         
         int numeroUnos = 0, numeroMenosUnos = 0;
         
@@ -608,24 +623,31 @@ public class Adaboost {
                 numeroMenosUnos++;
         }
     
-        return !(numeroUnos != 1 && numeroMenosUnos != 1);
+        if(numeroMenosUnos == resultados.length)
+            return -1;
+        else if (numeroUnos > 1)
+            return 0;
+        else
+            return 1;
+        
         
     }
     
     /**
      * Aplica el conjunto de los 10 clasificadores débiles a un conjunto de imagenes
-     * pasado por parámetro. Devuelve el porcentaje de acierto que se ha tenido.
+     * pasado por parámetro. Devuelve el numero de aciertos que se ha tenido.
      * @param clasificadoresDebiles Lista de Listas de clasificadores débiles. Por ejemplo,
      *                              la posición 0 tendrá la lista de los clasificadores
      *                              débiles de la clase avión.
      * @param imagenes Pareja de imagenes. La key es la imagen, el value es la clase a la que
      *                  pertenece realmente la imagen.
-     * @return Integer. Porcentaje de acierto de los clasificadores débiles.
+     * @return Integer. Numero de imagenes acertadas.
      */
     private int comprobarImagenes(List<List<ClasificadorDebil>> clasificadoresDebiles, List<Pair<Imagen,Integer>> imagenes){
         
         //Variable que guardará el resultado de aplicar cada clasificador débil a una imagen
         int resultados[] = new int[10];
+        int aciertos = 0;
         
         //recorremos todas las imagenes
         for(int i = 0; i < imagenes.size(); i++){
@@ -637,18 +659,24 @@ public class Adaboost {
                 
             }
            
-            if(comprobarResultadosAplicarClasificadoresFuertes(resultados)){
+            if(comprobarResultadosAplicarClasificadoresFuertes(resultados) == -1){
                 
-            }else{
+            }else if(comprobarResultadosAplicarClasificadoresFuertes(resultados) == 0){
                 
                 
+            }else if(comprobarResultadosAplicarClasificadoresFuertes(resultados) == 1){ //Solamente se ha resuelto una clase
+                for(int y = 0 ; y < resultados.length; y++)
+                    if(resultados[y] == 1) //clase de la imagen que se ha resuelto como buena
+                       if(y == imagenes.get(i).getValue()) //Si la clase de la imagen que se ha resuelto coincide con su clase real
+                           aciertos++;
+            
             }
         
         
         }
         
         
-        return 1;
+        return aciertos;
     }
     
     
@@ -666,7 +694,9 @@ public class Adaboost {
             //Se ejecuta la práctica como entrenamiento
             if (args[0].equals("-t")) {
                
-               Adaboost adaboost = new Adaboost(800,100);
+               Adaboost adaboost = new Adaboost(3072,100);
+               
+               //--------------------GENERAMOS CLASIFICADORES FUERTES--------------------//
                
                String[] clases = {"avion","coche","ciervo","gato","pajaro","perro","rana","caballo","barco","camion"};
                
@@ -685,26 +715,80 @@ public class Adaboost {
                         System.out.println("Completado.");
                }
                
+               //------------------------------------------------------------------------//
+               
+               System.out.println("");
+               
+               
+               //--------------------GUARDAMOS CLASIFICADORES FUERTES--------------------//
+               
                try{
+                    System.out.print("Guardando clasificadores débiles en " + args[1] + ". ");
                     Adaboost.guardarClasificadoresDebiles(clasificadoresDebiles,args[1]);
+                    System.out.println("Completado.");
                }catch(IOException e){
+                   System.out.println("Error escribiendo los clasificadores débiles en el fichero " + args[1]+ ". Traza del error:");
                    e.printStackTrace();
                }
+               
+               //------------------------------------------------------------------------//
+               
+               
+               //--------------------APLICAMOS CLASIFICADORES FUERTES--------------------//
+               
                imagenesConjuntoTest = adaboost.getImagenesConjuntoTest();
                
                List<List<Pair<Imagen,Integer>>> todasImagenes = adaboost.cargarTodasImagenesPruebayTest(imagenesConjuntoTest);
                List<Pair<Imagen,Integer>> imagenesPrueba = todasImagenes.get(0);
                List<Pair<Imagen,Integer>> imagenesTest = todasImagenes.get(1);
                
+               //------------------------------------------------------------------------//
+               
+               
+               System.out.println("");
+               
+               //--------------------GENERAMOS ESTADÍSITICAS--------------------//
+               
                System.out.println("imagenesPrueba: " + imagenesPrueba.size() + "\n" + "imagenesTest: " + imagenesTest.size());
                
-               int porcentajeImagenesPrueba = adaboost.comprobarImagenes(clasificadoresDebiles,imagenesPrueba);
-               int porcentajeImagenesTest = adaboost.comprobarImagenes(clasificadoresDebiles,imagenesTest);
-                
-                
+               int aciertosImagenesPrueba = adaboost.comprobarImagenes(clasificadoresDebiles,imagenesPrueba);
+               int aciertosImagenesTest = adaboost.comprobarImagenes(clasificadoresDebiles,imagenesTest);
+               int porcentaje = (aciertosImagenesPrueba*100)/imagenesPrueba.size();
+               
+               System.out.println("");
+               
+               System.out.println("Estadísticas - Conjunto de Entrenamiento");
+               System.out.println("_____________________________________");
+               System.out.println("El numero de aciertos sobre " + imagenesPrueba.size() + " imágenes es: " + aciertosImagenesPrueba);
+               System.out.println("% De acierto del clasificador fuerte: " + porcentaje + "%");
+               
+               System.out.println("");
+               porcentaje = (aciertosImagenesTest*100)/imagenesTest.size();
+               
+               System.out.println("Estadísticas - Conjunto de Test");
+               System.out.println("_____________________________________");
+               System.out.println("El numero de aciertos sobre " + imagenesTest.size() + " imágenes es: " + aciertosImagenesTest);
+               System.out.println("% De acierto del clasificador fuerte: " + porcentaje + "%");
+               //---------------------------------------------------------------//
+               
+               
             } else {
-                List<List<ClasificadorDebil>> clasificadoresDebiles = Adaboost.leerClasificadoresDebiles(args[0]);
-                System.out.println("ya");
+                
+                //--------------------LEEMOS CLASIFICADORES FUERTES--------------------//
+                
+                System.out.print("Leyendo clasificadores débiles del fichero " + args[0] + ".");
+                
+                try{
+                    List<List<ClasificadorDebil>> clasificadoresDebiles = Adaboost.leerClasificadoresDebiles(args[0]);
+                }catch(FileNotFoundException e){
+                    System.out.println("Ha ocurrido un error leyendo el fichero " + args[0] + ". Aquí la traza del error:");
+                    e.printStackTrace();
+                }
+                
+                System.out.println("Completado");
+                
+                //------------------------------------------------------------------------//
+                
             }
         } else {
             System.out.println("El número de parámetros es incorrecto");
