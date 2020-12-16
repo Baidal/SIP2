@@ -631,85 +631,86 @@ public class Adaboost {
         
     }
     
-    /**
-     * Calcula el error total de un clasificador fuerte.
-     * @param fuerte List<ClasificadorDebil>
-     * @return double
-     */
-    private double errorClasificadorFuerte(List<ClasificadorDebil> fuerte){
     
-        double error = 0;
-        
-        for(int i = 0; i < fuerte.size();i++)
-            error = error + fuerte.get(i).getError();
-        
-        return error;
-    }
+//    /**
+//     * Calcula el error total de un clasificador fuerte.
+//     * @param fuerte List<ClasificadorDebil>
+//     * @return double
+//     */
+//    private double errorClasificadorFuerte(List<ClasificadorDebil> fuerte){
+//    
+//        double error = 0;
+//        
+//        for(int i = 0; i < fuerte.size();i++)
+//            error = error + fuerte.get(i).getError();
+//        
+//        return error;
+//    }
+//    
+//    /**
+//     * Se calcula el clasificador fuerte de una lista de posiciones cuyo error
+//     * sea mínimo.
+//     * 
+//     * Esta lista de enteros contendrá las posiciones de 
+//     * los clasificadores fuertes que han resuelto una imagen como perteneciente
+//     * a una clase. Es decir, si al aplicar los 10 clasificadores débiles a una
+//     * imagen i, más de uno ha resuelto que la imagen pertenece a su clase.
+//     * 
+//     * @param posicionesClasificadorFuerte
+//     * @param clasificadoresFuertes
+//     * @return 
+//     */
+//    private int calcularClasificadorFuerteMenorError(List<Integer> posicionesClasificadorFuerte, List<List<ClasificadorDebil>> clasificadoresFuertes){
+//    
+//        int pos = posicionesClasificadorFuerte.get(0);
+//        double minimo_error = errorClasificadorFuerte(clasificadoresFuertes.get(pos)); //inicializamos el minimo error
+//        
+//        for(int i = 0; i < posicionesClasificadorFuerte.size(); i++){
+//            //Calculamos el error del clasificador fuerte de la posicion "posicionesClasificadorFuerte.get(i)"
+//            double error_actual =  errorClasificadorFuerte(clasificadoresFuertes.get(posicionesClasificadorFuerte.get(i)));
+//            
+//            if(error_actual < minimo_error){
+//                
+//                minimo_error = error_actual;
+//                pos = posicionesClasificadorFuerte.get(i);
+//            
+//            }
+//        
+//        }
+//        
+//        return pos;
+//        
+//    }
     
-    /**
-     * Se calcula el clasificador fuerte de una lista de posiciones cuyo error
-     * sea mínimo.
-     * 
-     * Esta lista de enteros contendrá las posiciones de 
-     * los clasificadores fuertes que han resuelto una imagen como perteneciente
-     * a una clase. Es decir, si al aplicar los 10 clasificadores débiles a una
-     * imagen i, más de uno ha resuelto que la imagen pertenece a su clase.
-     * 
-     * @param posicionesClasificadorFuerte
-     * @param clasificadoresFuertes
-     * @return 
-     */
-    private int calcularClasificadorFuerteMenorError(List<Integer> posicionesClasificadorFuerte, List<List<ClasificadorDebil>> clasificadoresFuertes){
-    
-        int pos = posicionesClasificadorFuerte.get(0);
-        double minimo_error = errorClasificadorFuerte(clasificadoresFuertes.get(pos)); //inicializamos el minimo error
-        
-        for(int i = 0; i < posicionesClasificadorFuerte.size(); i++){
-            //Calculamos el error del clasificador fuerte de la posicion "posicionesClasificadorFuerte.get(i)"
-            double error_actual =  errorClasificadorFuerte(clasificadoresFuertes.get(posicionesClasificadorFuerte.get(i)));
-            
-            if(error_actual < minimo_error){
-                
-                minimo_error = error_actual;
-                pos = posicionesClasificadorFuerte.get(i);
-            
-            }
-        
-        }
-        
-        return pos;
-        
-    }
-    
-    private double confianzaClasificadorFuerte(List<ClasificadorDebil> fuerte){
-        double confianza = 0;
-    
-        for(int i = 0; i < fuerte.size();i++)
-            confianza = confianza + fuerte.get(i).getConfianza();
-        
-        return confianza;
-    }
-    
-    private int calcularClasificadorFuerteMayorConfianza(List<Integer> posicionesClasificadorFuerte, List<List<ClasificadorDebil>> clasificadoresFuertes){
-        int pos = posicionesClasificadorFuerte.get(0);
-        double maxima_confianza = confianzaClasificadorFuerte(clasificadoresFuertes.get(pos)); //inicializamos el minimo error
-        
-        for(int i = 0; i < posicionesClasificadorFuerte.size(); i++){
-            //Calculamos el error del clasificador fuerte de la posicion "posicionesClasificadorFuerte.get(i)"
-            double confianza_actual =  confianzaClasificadorFuerte(clasificadoresFuertes.get(posicionesClasificadorFuerte.get(i)));
-            
-            if(confianza_actual > maxima_confianza){
-                
-                maxima_confianza = confianza_actual;
-                pos = posicionesClasificadorFuerte.get(i);
-            
-            }
-        
-        }
-        
-        return pos;
-    
-    }
+//    private double confianzaClasificadorFuerte(List<ClasificadorDebil> fuerte){
+//        double confianza = 0;
+//    
+//        for(int i = 0; i < fuerte.size();i++)
+//            confianza = confianza + fuerte.get(i).getConfianza();
+//        
+//        return confianza;
+//    }
+//    
+//    private int calcularClasificadorFuerteMayorConfianza(List<Integer> posicionesClasificadorFuerte, List<List<ClasificadorDebil>> clasificadoresFuertes){
+//        int pos = posicionesClasificadorFuerte.get(0);
+//        double maxima_confianza = confianzaClasificadorFuerte(clasificadoresFuertes.get(pos)); //inicializamos el minimo error
+//        
+//        for(int i = 0; i < posicionesClasificadorFuerte.size(); i++){
+//            //Calculamos el error del clasificador fuerte de la posicion "posicionesClasificadorFuerte.get(i)"
+//            double confianza_actual =  confianzaClasificadorFuerte(clasificadoresFuertes.get(posicionesClasificadorFuerte.get(i)));
+//            
+//            if(confianza_actual > maxima_confianza){
+//                
+//                maxima_confianza = confianza_actual;
+//                pos = posicionesClasificadorFuerte.get(i);
+//            
+//            }
+//        
+//        }
+//        
+//        return pos;
+//    
+//    }
     
     /**
      * Aplica el conjunto de los 10 clasificadores fuertes a un conjunto de imagenes
@@ -737,32 +738,10 @@ public class Adaboost {
                 
             }
            
-            if(comprobarResultadosAplicarClasificadoresFuertes(resultados) == -1 || comprobarResultadosAplicarClasificadoresFuertes(resultados) == 0){ //se resuelve como positiva mas de una clase
-                
-                /*
-                //Guardamos en la lista los clasificadores fuertes que han dado 1 (han resuleto las imagenes como pertenecientes a una clase)
-                List<Integer> posicionesClasificadorFuerte = new ArrayList<>();
-                
-                if(comprobarResultadosAplicarClasificadoresFuertes(resultados) == 0){
-                    for(int y = 0; y < resultados.length; y++)
-                        if(resultados[y] == 1)
-                            posicionesClasificadorFuerte.add(y);
-                }else{
-                    for(int j = 0; j < resultados.length; j++)
-                        
-                            posicionesClasificadorFuerte.add(j);
-                }
-                
-                //posición contendrá la posición del clasificador fuerte que ha resuelto 1 con menor error
-                int posicion = calcularClasificadorFuerteMayorConfianza(posicionesClasificadorFuerte,clasificadoresFuertes);
-
-                if(resultados[posicion] == imagenes.get(i).getValue())
-                    aciertos++;
-                
-                */
+            if(comprobarResultadosAplicarClasificadoresFuertes(resultados) == -1 || comprobarResultadosAplicarClasificadoresFuertes(resultados) == 0){ //se resuelve como positiva mas de una clase                          
                 
                 //Guardamos el mayor valor de resultados[] 
-                double mayor_valor = Double.MIN_VALUE;
+                double mayor_valor = -1*Double.MAX_VALUE;
                 int posicion = 0;
                 
                 for(int y = 0; y < resultados.length;y++){
@@ -778,10 +757,11 @@ public class Adaboost {
                     
             }else if(comprobarResultadosAplicarClasificadoresFuertes(resultados) == 1){ //Solamente se ha resuelto una clase
                 for(int y = 0 ; y < resultados.length; y++)
-                    if(resultados[y] == 1) //clase de la imagen que se ha resuelto como buena
-                       if(y == imagenes.get(i).getValue()) //Si la clase de la imagen que se ha resuelto coincide con su clase real
+                    if(resultados[y] > 0) //clase de la imagen que se ha resuelto como buena
+                       if(y == imagenes.get(i).getValue()){ //Si la clase de la imagen que se ha resuelto coincide con su clase real
                            aciertos++;
-            
+                           //System.out.println("entramos aqui");
+                       }
             }
         
         
@@ -806,7 +786,7 @@ public class Adaboost {
             //Se ejecuta la práctica como entrenamiento
             if (args[0].equals("-t")) {
                
-               Adaboost adaboost = new Adaboost(3072,400);
+               Adaboost adaboost = new Adaboost(40000,200);
                
                //--------------------GENERAMOS CLASIFICADORES FUERTES--------------------//
                
