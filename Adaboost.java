@@ -410,7 +410,7 @@ public class Adaboost {
      * @param img Imagen a la que aplicar los clasificadores.
      * @return int Negativo si no pertenece, positivo si sí
      */
-    private int aplicarClasificadorFuerteImagen(List<ClasificadorDebil> clasificadores, Imagen img){
+    private double aplicarClasificadorFuerteImagen(List<ClasificadorDebil> clasificadores, Imagen img){
         List<Integer> list = new ArrayList<>();
     
         //Cargamos el vector de bytes de la imagen
@@ -451,10 +451,7 @@ public class Adaboost {
             
         }
         
-        if(pertenece > 0.0)
-            return 1;
-        else
-            return -1;
+        return pertenece;
         
     }
     
@@ -613,12 +610,12 @@ public class Adaboost {
      * @param resultados int[]
      * @return int {-1,0,1}
      */
-    private int comprobarResultadosAplicarClasificadoresFuertes(int resultados[]){
+    private int comprobarResultadosAplicarClasificadoresFuertes(double resultados[]){
         
         int numeroUnos = 0, numeroMenosUnos = 0;
         
         for(int i = 0; i < resultados.length;i++){
-            if(resultados[i] == 1)
+            if(resultados[i] > 0)
                 numeroUnos++;
             else
                 numeroMenosUnos++;
@@ -727,7 +724,7 @@ public class Adaboost {
     private int comprobarImagenes(List<List<ClasificadorDebil>> clasificadoresFuertes, List<Pair<Imagen,Integer>> imagenes){
         
         //Variable que guardará el resultado de aplicar cada clasificador débil a una imagen
-        int resultados[] = new int[10];
+        double resultados[] = new double[10];
         int aciertos = 0;
         
         //recorremos todas las imagenes
@@ -740,8 +737,9 @@ public class Adaboost {
                 
             }
            
-            if(comprobarResultadosAplicarClasificadoresFuertes(resultados) == -1 || comprobarResultadosAplicarClasificadoresFuertes(resultados) == 0){
+            if(comprobarResultadosAplicarClasificadoresFuertes(resultados) == -1 || comprobarResultadosAplicarClasificadoresFuertes(resultados) == 0){ //se resuelve como positiva mas de una clase
                 
+                /*
                 //Guardamos en la lista los clasificadores fuertes que han dado 1 (han resuleto las imagenes como pertenecientes a una clase)
                 List<Integer> posicionesClasificadorFuerte = new ArrayList<>();
                 
@@ -761,6 +759,23 @@ public class Adaboost {
                 if(resultados[posicion] == imagenes.get(i).getValue())
                     aciertos++;
                 
+                */
+                
+                //Guardamos el mayor valor de resultados[] 
+                double mayor_valor = Double.MIN_VALUE;
+                int posicion = 0;
+                
+                for(int y = 0; y < resultados.length;y++){
+                    if(resultados[y] > mayor_valor){
+                        posicion = y;
+                        mayor_valor = resultados[y];
+                    }
+                }
+                
+                //si 
+                if(posicion == imagenes.get(i).getValue())
+                    aciertos++;
+                    
             }else if(comprobarResultadosAplicarClasificadoresFuertes(resultados) == 1){ //Solamente se ha resuelto una clase
                 for(int y = 0 ; y < resultados.length; y++)
                     if(resultados[y] == 1) //clase de la imagen que se ha resuelto como buena
@@ -791,7 +806,7 @@ public class Adaboost {
             //Se ejecuta la práctica como entrenamiento
             if (args[0].equals("-t")) {
                
-               Adaboost adaboost = new Adaboost(800,200);
+               Adaboost adaboost = new Adaboost(3072,400);
                
                //--------------------GENERAMOS CLASIFICADORES FUERTES--------------------//
                
