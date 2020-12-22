@@ -771,6 +771,34 @@ public class Adaboost {
         return aciertos;
     }
     
+    /**
+     * Esta clase es usada en la parte del test de main. Se encarga de aplicar
+     * los 10 clasificadores fuertes a una imagen y devolver la clase resuelta
+     * por este.
+     * 
+     * @param fuerte Lista de clasificadores fuertes
+     * @param img
+     * @return 
+     */
+    private int resolverImagen(List<List<ClasificadorDebil>> fuerte, Imagen img){
+    
+        int clase = 0;
+        double anterior_resultado = -1.0*Double.MAX_VALUE;
+        
+        
+        for(int i = 0; i < fuerte.size(); i++){
+            
+            double resultado = aplicarClasificadorFuerteImagen(fuerte.get(i),img);
+            if(resultado > anterior_resultado){
+                clase = i;
+                anterior_resultado = resultado;
+            }
+                
+        }
+        
+        return clase;
+    }
+    
     
     /**
      * @param args the command line arguments
@@ -786,7 +814,7 @@ public class Adaboost {
             //Se ejecuta la práctica como entrenamiento
             if (args[0].equals("-t")) {
                
-               Adaboost adaboost = new Adaboost(40000,200);
+               Adaboost adaboost = new Adaboost(80,2000);
                
                //--------------------GENERAMOS CLASIFICADORES FUERTES--------------------//
                
@@ -871,7 +899,21 @@ public class Adaboost {
                 System.out.print("Leyendo clasificadores débiles del fichero " + args[0] + ".");
                 
                 try{
-                    List<List<ClasificadorDebil>> clasificadoresDebiles = Adaboost.leerClasificadoresDebiles(args[0]);
+                    List<List<ClasificadorDebil>> clasificadoresFuertes = Adaboost.leerClasificadoresDebiles(args[0]);
+                
+                    Imagen img = new Imagen();
+                    
+                    img.loadFromPath("./cifar10_2000/0/77.png");
+                
+                    Adaboost adaboost = new Adaboost(50,50);
+                    
+                    int clase = adaboost.resolverImagen(clasificadoresFuertes, img);
+                    
+                    System.out.println("Clasificación de la imagen\n" + "_____________________________________");
+                    
+                    System.out.println("La imagen representa el objeto: " + clase);
+                
+                
                 }catch(FileNotFoundException e){
                     System.out.println("Ha ocurrido un error leyendo el fichero " + args[0] + ". Aquí la traza del error:");
                     e.printStackTrace();
